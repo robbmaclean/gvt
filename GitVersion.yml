@@ -1,50 +1,47 @@
 mode: ContinuousDeployment
-next-version: 2.4
 commit-message-incrementing: Disabled
 branches:
-  master:
-    regex: master
+  main:
+    regex: main
     mode: ContinuousDeployment
-    tag: preview
+    label: preview
     increment: Minor
-    prevent-increment-of-merged-branch-version: true
+    # prevent-increment-of-merged-branch-version: true
+    # prevent-increment:
+    #   of-merged-branch: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
   release:
     regex: release[/]
     mode: ContinuousDeployment
-    tag: rc
+    label: rc
     increment: Patch
-    prevent-increment-of-merged-branch-version: true
+    # prevent-increment-of-merged-branch-version: true
+    # prevent-increment:
+    #   of-merged-branch: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: true
   feature:
     regex: feature[/]
     mode: ContinuousDeployment
-    tag: useBranchName
+    label: useBranchName
     increment: Inherit
-    prevent-increment-of-merged-branch-version: false
+    # prevent-increment-of-merged-branch-version: false
+    # prevent-increment:
+    #   of-merged-branch: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
   hotfix:
     regex: hotfix[/]
     mode: ContinuousDeployment
-    tag: rc
+    label: rc
     increment: Patch
-    prevent-increment-of-merged-branch-version: false
+    # prevent-increment-of-merged-branch-version: false
+    # prevent-increment:
+    #   of-merged-branch: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
-  tag:
-    regex: tag[/]
-    mode: ContinuousDeployment
-    tag: ''
-    increment: None
-    source-branches: []
-ignore:
-  sha:
-    - 4763d899520bc0a69b97080e15d1bf26e6ea89b2
-  commits-before: 2018-10-23T00:00:00

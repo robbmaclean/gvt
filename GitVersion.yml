@@ -1,4 +1,4 @@
-mode: ContinuousDeployment
+mode: ManualDeployment
 tag-prefix: ''
 commit-message-incrementing: Disabled
 version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
@@ -17,7 +17,7 @@ branches:
 
   release:
     regex: ^release[/-]
-    mode: ContinuousDeployment
+    mode: ManualDeployment
     label: rc
     increment: Patch
     is-release-branch: true
@@ -26,7 +26,7 @@ branches:
 
   feature:
     regex: ^feature[/-]
-    mode: ContinuousDeployment
+    mode: ManualDeployment
     label: useBranchName
     increment: Inherit
     prevent-increment:
@@ -34,7 +34,7 @@ branches:
 
   hotfix:
     regex: ^hotfix[/-]
-    mode: ContinuousDeployment
+    mode: ManualDeployment
     label: rc
     increment: Patch
     prevent-increment:

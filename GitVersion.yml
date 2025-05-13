@@ -1,39 +1,57 @@
 commit-message-incrementing: Disabled
-version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
+# version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
+# update-build-number: true
 
 branches:
   main:
     regex: ^main$
-    mode: ManualDeployment
+    mode: ContinuousDelivery
     label: preview
     increment: Minor
-    prevent-increment:
-      of-merged-branch: true
-      when-current-commit-tagged: false
+    # prevent-increment:
+    #   of-merged-branch: true
+    #   when-current-commit-tagged: false
     is-release-branch: false
-    pre-release-weight: 1
 
   release:
     regex: ^release[/-]
-    mode: ManualDeployment
+    mode: ContinuousDelivery
     label: rc
-    increment: Patch
+    increment: Inherit
     is-release-branch: true
-    prevent-increment:
-      of-merged-branch: true
+    source-branches:
+    - main
 
   feature:
-    regex: ^feature[/-]
-    mode: ManualDeployment
-    label: useBranchName
+    regex: ^features?[\/-](?<BranchName>.+)
+    mode: ContinuousDelivery
+    label: '{BranchName}'
     increment: Inherit
-    prevent-increment:
-      of-merged-branch: true
+    source-branches:
+    - main
+    - release
+    - hotfix
 
   hotfix:
     regex: ^hotfix[/-]
-    mode: ManualDeployment
+    mode: ContinuousDelivery
     label: rc
     increment: Patch
+    is-release-branch: true
+    source-branches:
+    - main
+
+  unknown:
+    mode: ContinuousDelivery
+    label: '{BranchName}'
+    increment: Inherit
     prevent-increment:
-      of-merged-branch: true
+      when-current-commit-tagged: true
+    regex: (?<BranchName>.+)
+    source-branches:
+    - main
+    - release
+    - feature
+    - hotfix
+    is-source-branch-for: []
+    is-main-branch: false

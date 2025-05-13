@@ -1,6 +1,6 @@
 # Run with `act --artifact-server-path ./artifacts -j publish`
 
-name: .NET and Angular Build and Publish
+name: Just a Test
 
 # Build must be run manually
 on: 

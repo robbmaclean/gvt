@@ -1,47 +1,32 @@
 mode: ContinuousDeployment
 commit-message-incrementing: Disabled
+
 branches:
   main:
-    regex: main
+    regex: ^main$
     mode: ContinuousDeployment
     label: preview
     increment: Minor
-    # prevent-increment-of-merged-branch-version: true
-    # prevent-increment:
-    #   of-merged-branch: false
-    track-merge-target: false
-    tracks-release-branches: false
+    prevent-increment:
+      of-merged-branch: true
     is-release-branch: false
+    pre-release-weight: 1
+
   release:
-    regex: release[/]
+    regex: ^release[/-]
     mode: ContinuousDeployment
     label: rc
     increment: Patch
-    # prevent-increment-of-merged-branch-version: true
-    # prevent-increment:
-    #   of-merged-branch: false
-    track-merge-target: false
-    tracks-release-branches: false
     is-release-branch: true
+
   feature:
-    regex: feature[/]
+    regex: ^feature[/-]
     mode: ContinuousDeployment
     label: useBranchName
     increment: Inherit
-    # prevent-increment-of-merged-branch-version: false
-    # prevent-increment:
-    #   of-merged-branch: false
-    track-merge-target: false
-    tracks-release-branches: false
-    is-release-branch: false
+
   hotfix:
-    regex: hotfix[/]
+    regex: ^hotfix[/-]
     mode: ContinuousDeployment
     label: rc
     increment: Patch
-    # prevent-increment-of-merged-branch-version: false
-    # prevent-increment:
-    #   of-merged-branch: false
-    track-merge-target: false
-    tracks-release-branches: false
-    is-release-branch: false

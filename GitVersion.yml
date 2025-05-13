@@ -1,5 +1,3 @@
-mode: ManualDeployment
-tag-prefix: ''
 commit-message-incrementing: Disabled
 version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
 

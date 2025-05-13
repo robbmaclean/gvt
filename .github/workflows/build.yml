@@ -48,6 +48,7 @@ jobs:
         run: |
           dotnet tool install --global GitVersion.Tool --version 6.3.0
           export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet-gitversion /showConfig
           dotnet-gitversion /output json | tee gitversion.json
           fullsemver=$(jq -r .FullSemVer gitversion.json)
           echo "fullsemver=$fullsemver" >> $GITHUB_OUTPUT

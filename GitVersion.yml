@@ -1,14 +1,17 @@
 mode: ContinuousDeployment
+tag-prefix: ''
 commit-message-incrementing: Disabled
+version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
 
 branches:
   main:
     regex: ^main$
-    mode: ContinuousDeployment
+    mode: ManualDeployment
     label: preview
     increment: Minor
     prevent-increment:
       of-merged-branch: true
+      when-current-commit-tagged: false
     is-release-branch: false
     pre-release-weight: 1
 
@@ -18,15 +21,21 @@ branches:
     label: rc
     increment: Patch
     is-release-branch: true
+    prevent-increment:
+      of-merged-branch: true
 
   feature:
     regex: ^feature[/-]
     mode: ContinuousDeployment
     label: useBranchName
     increment: Inherit
+    prevent-increment:
+      of-merged-branch: true
 
   hotfix:
     regex: ^hotfix[/-]
     mode: ContinuousDeployment
     label: rc
     increment: Patch
+    prevent-increment:
+      of-merged-branch: true

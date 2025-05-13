@@ -1,0 +1,72 @@
+# Run with `act --artifact-server-path ./artifacts -j publish`
+
+name: .NET and Angular Build and Publish
+
+# Build must be run manually
+on: 
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-**'
+
+jobs:
+
+  gitversion:
+    runs-on: ubuntu-latest
+    outputs:
+      fullsemver: ${{ env.ACT && steps.gitversion_act.outputs.fullsemver || steps.gitversion_ci.outputs.fullsemver }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Use official GitVersion actions when NOT running in act
+      - name: Install GitVersion
+        if: ${{ !env.ACT }} 
+        uses: gittools/actions/gitversion/setup@v3.2.1
+        with:
+          versionSpec: '6.3.x'
+
+      - name: Run GitVersion
+        if: ${{ !env.ACT }} 
+        id: gitversion_ci
+        uses: gittools/actions/gitversion/execute@v3.2.1
+
+      # Fallback for local `act` runs
+      - name: Setup .NET
+        if: ${{ env.ACT }} 
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+  
+      - name: Install and Run GitVersion
+        if: ${{ env.ACT }} 
+        id: gitversion_act
+        run: |
+          dotnet tool install --global GitVersion.Tool --version 6.3.0
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet-gitversion /output json | tee gitversion.json
+          fullsemver=$(jq -r .FullSemVer gitversion.json)
+          echo "fullsemver=$fullsemver" >> $GITHUB_OUTPUT
+
+  just-testing:
+    runs-on: ubuntu-latest
+    needs: gitversion
+    permissions: # Add permissions block here
+      contents: write # Give the job write permission to create releases
+    steps:
+    - name: Echo
+      run: |
+        echo "THER FULLSEMVER: ${{needs.gitversion.outputs.fullsemver}}"
+        echo "Just Testing 1 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-1.txt
+        echo "Just Testing 2 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-2.txt
+
+    - name: Create Release
+      if: ${{ !env.ACT }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{needs.gitversion.outputs.fullsemver}}
+        files: just-testing*.txt

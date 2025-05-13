@@ -8,17 +8,19 @@ branches:
     mode: ContinuousDelivery
     label: preview
     increment: Minor
-    # prevent-increment:
-    #   of-merged-branch: true
-    #   when-current-commit-tagged: false
+    prevent-increment:
+      # of-merged-branch: true
+      when-current-commit-tagged: true
     is-release-branch: false
 
   release:
     regex: ^release[/-]
     mode: ContinuousDelivery
     label: rc
-    increment: Inherit
     is-release-branch: true
+    increment: Inherit
+    prevent-increment:
+      when-current-commit-tagged: true
     source-branches:
     - main
 
@@ -27,6 +29,8 @@ branches:
     mode: ContinuousDelivery
     label: '{BranchName}'
     increment: Inherit
+    prevent-increment:
+      when-current-commit-tagged: true
     source-branches:
     - main
     - release
@@ -36,8 +40,10 @@ branches:
     regex: ^hotfix[/-]
     mode: ContinuousDelivery
     label: rc
-    increment: Patch
     is-release-branch: true
+    increment: Patch
+    prevent-increment:
+      when-current-commit-tagged: true
     source-branches:
     - main
 
@@ -53,5 +59,3 @@ branches:
     - release
     - feature
     - hotfix
-    is-source-branch-for: []
-    is-main-branch: false

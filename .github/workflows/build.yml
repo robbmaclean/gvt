@@ -6,7 +6,7 @@ name: Just a Test
 on: 
   workflow_dispatch:
   push:
-    branches: [main]
+    # branches: [main]
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+-**'
@@ -65,9 +65,9 @@ jobs:
         echo "Just Testing 1 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-1.txt
         echo "Just Testing 2 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-2.txt
 
-    - name: Create Release
-      if: ${{ !env.ACT }}
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{needs.gitversion.outputs.fullsemver}}
-        files: just-testing*.txt
+    # - name: Create Release
+    #   if: ${{ !env.ACT }}
+    #   uses: softprops/action-gh-release@v2
+    #   with:
+    #     tag_name: ${{needs.gitversion.outputs.fullsemver}}
+    #     files: just-testing*.txt

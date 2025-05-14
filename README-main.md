@@ -1,1 +1,1 @@
-Just a commit
+Just a commit.

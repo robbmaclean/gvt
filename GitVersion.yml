@@ -8,6 +8,7 @@ branches:
     mode: ContinuousDelivery
     label: preview
     increment: Minor
+    tracks-release-branches: true
     prevent-increment:
       # of-merged-branch: true
       when-current-commit-tagged: true

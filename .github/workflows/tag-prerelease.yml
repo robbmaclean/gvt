@@ -1,0 +1,29 @@
+name: Tag Pre-release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  gitversion:
+    uses: ./.github/workflows/gitversion-job.yml
+
+  tag:
+    needs: gitversion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate and tag
+        run: |
+          echo "SemVer: ${{ needs.gitversion.outputs.semVer }}"
+          echo "Pre-release label: ${{ needs.gitversion.outputs.preReleaseLabel }}"
+          if [ -z "${{ needs.gitversion.outputs.preReleaseLabel }}" ]; then
+            echo "Error: Missing pre-release label. Aborting."
+            exit 1
+          fi
+
+        # git config user.name "github-actions"
+        # git config user.email "github-actions@github.com"
+        # git tag -a "${{ needs.gitversion.outputs.semVer }}" -m "Tagging version ${{ needs.gitversion.outputs.semVer }}"
+        # git push origin "refs/tags/${{ needs.gitversion.outputs.semVer }}"

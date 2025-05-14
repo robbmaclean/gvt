@@ -1,0 +1,32 @@
+name: GitVersion Job
+
+on:
+  workflow_call:
+    outputs:
+      semVer:
+        description: "The calculated SemVer"
+        value: ${{ jobs.gitversion.outputs.semVer }}
+      preReleaseLabel:
+        description: "The pre-release label (if any)"
+        value: ${{ jobs.gitversion.outputs.preReleaseLabel }}
+
+jobs:
+  gitversion:
+    runs-on: ubuntu-latest
+    outputs:
+      semVer: ${{ steps.gitversion.outputs.semVer }}
+      preReleaseLabel: ${{ steps.gitversion.outputs.preReleaseLabel }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: GitTools/actions/gitversion/setup@v0.11.0
+        with:
+          versionSpec: '5.x'
+
+      - name: Run GitVersion
+        id: gitversion
+        uses: GitTools/actions/gitversion/execute@v0.11.0

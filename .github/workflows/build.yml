@@ -1,9 +1,9 @@
 # Run with `act --artifact-server-path ./artifacts -j publish`
 
-name: Just a Test
+name: Release
 
-# Build must be run manually
-on: 
+on:
+  # Build can be run manually
   workflow_dispatch:
   push:
     # branches: [main]
@@ -25,25 +25,25 @@ jobs:
 
       # Use official GitVersion actions when NOT running in act
       - name: Install GitVersion
-        if: ${{ !env.ACT }} 
+        if: ${{ !env.ACT }}
         uses: gittools/actions/gitversion/setup@v3.2.1
         with:
           versionSpec: '6.3.x'
 
       - name: Run GitVersion
-        if: ${{ !env.ACT }} 
+        if: ${{ !env.ACT }}
         id: gitversion_ci
         uses: gittools/actions/gitversion/execute@v3.2.1
 
       # Fallback for local `act` runs
       - name: Setup .NET
-        if: ${{ env.ACT }} 
+        if: ${{ env.ACT }}
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-  
+
       - name: Install and Run GitVersion
-        if: ${{ env.ACT }} 
+        if: ${{ env.ACT }}
         id: gitversion_act
         run: |
           dotnet tool install --global GitVersion.Tool --version 6.3.0

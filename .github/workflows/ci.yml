@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  check-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if README contains "fail"
+        run: |
+          if grep -i 'fail' README.md; then
+            echo "README.md contains the word 'fail'. Failing the workflow."
+            exit 1
+          else
+            echo "README.md is clean."
+          fi

@@ -16,7 +16,7 @@ jobs:
   gitversion:
     runs-on: ubuntu-latest
     outputs:
-      fullsemver: ${{ env.ACT && steps.gitversion_act.outputs.fullsemver || steps.gitversion_ci.outputs.fullsemver }}
+      semver: ${{ env.ACT && steps.gitversion_act.outputs.semver || steps.gitversion_ci.outputs.semver }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,8 +50,8 @@ jobs:
           export PATH="$PATH:$HOME/.dotnet/tools"
           dotnet-gitversion /showConfig
           dotnet-gitversion /output json | tee gitversion.json
-          fullsemver=$(jq -r .FullSemVer gitversion.json)
-          echo "fullsemver=$fullsemver" >> $GITHUB_OUTPUT
+          semver=$(jq -r .SemVer gitversion.json)
+          echo "semver=$semver" >> $GITHUB_OUTPUT
 
   just-testing:
     runs-on: ubuntu-latest
@@ -61,13 +61,13 @@ jobs:
     steps:
     - name: Echo
       run: |
-        echo "THER FULLSEMVER: ${{needs.gitversion.outputs.fullsemver}}"
-        echo "Just Testing 1 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-1.txt
-        echo "Just Testing 2 ${{needs.gitversion.outputs.fullsemver}}" > just-testing-2.txt
+        echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
+        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
+        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
 
-    # - name: Create Release
-    #   if: ${{ !env.ACT }}
-    #   uses: softprops/action-gh-release@v2
-    #   with:
-    #     tag_name: ${{needs.gitversion.outputs.fullsemver}}
-    #     files: just-testing*.txt
+    - name: Create Release
+      if: ${{ !env.ACT }}
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{needs.gitversion.outputs.semver}}
+        files: just-testing*.txt

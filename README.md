@@ -2,4 +2,4 @@
 
 0.5.0
 
-fail.
+Does the PR template work?

@@ -1,3 +1,4 @@
+# would be nice to ensure we don't try to add the tag again if it already exists on the same commit.  It should fail if it already exists on another commit.
 name: Tag Pre-release
 
 on:

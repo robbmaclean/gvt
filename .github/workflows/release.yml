@@ -29,12 +29,66 @@ jobs:
         echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
         echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
 
-    - name: Update package.json version
-      working-directory: client
+    - name: Ensure version tag is on HEAD or doesn't exist
       run: |
-        jq --arg ver "${{needs.gitversion.outputs.semver}}" '.version = $ver' package.json > package.json.tmp && mv package.json.tmp package.json
-        echo "THE PACKAGEJSON NOW:"
+        VERSION="${{needs.gitversion.outputs.semVer}}"
+
+        echo "Checking if tag $VERSION exists and matches HEAD..."
+
+        # Fetch tags from origin
+        git fetch --tags
+
+        # Check if tag exists
+        if git show-ref --tags --quiet --verify "refs/tags/$VERSION"; then
+          TAG_COMMIT=$(git rev-list -n 1 "refs/tags/$VERSION")
+          HEAD_COMMIT=$(git rev-parse HEAD)
+
+          echo "Tag $VERSION exists at commit $TAG_COMMIT"
+          echo "HEAD is at commit $HEAD_COMMIT"
+
+          if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+            echo "❌ Tag $VERSION exists but does not point to HEAD. Aborting."
+            exit 1
+          else
+            echo "✅ Tag $VERSION is already on HEAD. Continuing."
+          fi
+        else
+          echo "ℹ️ Tag $VERSION does not exist. It will be created later."
+        fi
+
+    - name: Update Version
+      run: |
+        VERSION="${{needs.gitversion.outputs.semVer}}"
+
+        # Ensure version does not contain characters that will mess up sed command
+        if [[ "$VERSION" =~ [/&] ]]; then
+          echo "❌ VERSION cannot contain unsupported characters '/'' or '&': $VERSION"
+          exit 1
+        fi
+
+        # Ensure target files exist
+        if [[ ! -f backend/build-files/build-defaults.properties || ! -f backend/modules/hyland/core/config/hm-version.properties ]]; then
+          echo "❌ One or more version files are missing."
+          exit 1
+        fi
+
+        sed -i "s/^releaseVersion=.*/releaseVersion=$VERSION/" backend/build-files/build-defaults.properties
+        echo ">>>>Updated properties file:"
+        cat backend/build-files/build-defaults.properties
+
+        sed -i "s/^hm\.version=.*/hm.version=$VERSION/" backend/modules/hyland/core/config/hm-version.properties
+        echo ">>>>Updated hm-version.properties file:"
+        cat backend/modules/hyland/core/config/hm-version.properties
+
+    - name: Update package.json version
+      working-directory: frontend
+      run: |
+        VERSION="${{needs.gitversion.outputs.semVer}}"
+        npm version $VERSION --no-git-tag-version
+        echo ">>>THE PACKAGEJSON NOW:"
         cat package.json
+        echo ">>>THE PACKAGElockJSON NOW:"
+        cat package-lock.json
 
   just-testing:
     runs-on: ubuntu-latest

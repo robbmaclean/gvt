@@ -1,5 +1,9 @@
 name: GitVersion
 
+# This is not an error (if it's displaying as an error), the YAML schema vscode uses is out of date.
+description: |
+  This workflow executes GitVersion and outputs version information that can be used in other workflows.
+  It can also be executed manually if you want to see what version a current branch is producing.
 on:
   workflow_dispatch:
   workflow_call:

@@ -16,6 +16,25 @@ jobs:
   gitversion:
     uses: ./.github/workflows/gitversion-job.yml
 
+  pretend-build:
+    runs-on: ubuntu-latest
+    needs: gitversion
+    permissions: # Add permissions block here
+      contents: write # Give the job write permission to create releases
+    steps:
+    - name: Echo
+      run: |
+        echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
+        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
+        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
+
+    - name: Update package.json version
+      working-directory: client
+      run: |
+        jq --arg ver "${{needs.gitversion.outputs.semver}}" '.version = $ver' package.json > package.json.tmp && mv package.json.tmp package.json
+        echo "THE PACKAGEJSON NOW:"
+        cat package.json
+
   just-testing:
     runs-on: ubuntu-latest
     needs: gitversion

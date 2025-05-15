@@ -1,9 +1,10 @@
-name: GitVersion
+# This workflow executes GitVersion and outputs version information that can be used in other workflows.
+# It can also be executed manually if you want to see what version a current branch is producing-
+# look in the "Run GitVersion" step output of the "gitversion" job to see the complete info that
+# GitVersion produces, or look in the "Complete Job" step at the end to see the values being made
+# available to other workflows.
+name: Run GitVersion
 
-# This is not an error (if it's displaying as an error), the YAML schema vscode uses is out of date.
-description: |
-  This workflow executes GitVersion and outputs version information that can be used in other workflows.
-  It can also be executed manually if you want to see what version a current branch is producing.
 on:
   workflow_dispatch:
   workflow_call:

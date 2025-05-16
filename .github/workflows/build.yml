@@ -1,45 +1,34 @@
 # Run with `act --artifact-server-path ./artifacts -j publish`
 
-# >>>> THIS IS THE OLD ONE
-name: Release
+name: Build
 
 on:
-  # Build can be run manually
-  workflow_dispatch:
-  # push:
-  #   # branches: [main]
-  #   tags:
-  #     - '[0-9]+.[0-9]+.[0-9]+'
-  #     - '[0-9]+.[0-9]+.[0-9]+-**'
+  # Build can be run manually (but the version will not be set)
+  #workflow_dispatch:
   workflow_call:
     inputs:
-      # When true, the version will be bumped to the official release version
-      release:
-        required: false
-        type: boolean
-        default: false
+      version:
+        required: true
+        type: string
 
 jobs:
 
-  gitversion:
-    uses: ./.github/workflows/gitversion-job.yml
-
-  pretend-build:
+  build:
     runs-on: ubuntu-latest
-    needs: gitversion
     steps:
     - name: Checkout
       uses: actions/checkout@v4
 
     - name: Echo
       run: |
-        echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
-        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
-        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
+        echo "THER VERSION: ${{inputs.version}}"
+        echo "Just Testing 1 ${{inputs.version}}" > just-testing-1.txt
+        echo "Just Testing 2 ${{inputs.version}}" > just-testing-2.txt
 
+    # Prevent accidentally building a version number that's already tagged on another commit
     - name: Ensure version tag is on HEAD or doesn't exist
       run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
+        VERSION="${{inputs.version}}"
 
         echo "Checking if tag $VERSION exists and matches HEAD..."
 
@@ -66,7 +55,7 @@ jobs:
 
     - name: Update Version
       run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
+        VERSION="${{inputs.version}}"
 
         # Ensure version does not contain characters that will mess up sed command
         if [[ "$VERSION" =~ [/&] ]]; then
@@ -91,28 +80,10 @@ jobs:
     - name: Update package.json version
       working-directory: frontend
       run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
+        VERSION="${{inputs.version}}"
         npm version $VERSION --no-git-tag-version
         echo ">>>THE PACKAGEJSON NOW:"
         cat package.json
         echo ">>>THE PACKAGElockJSON NOW:"
         cat package-lock.json
 
-  just-testing:
-    runs-on: ubuntu-latest
-    needs: gitversion
-    permissions: # Add permissions block here
-      contents: write # Give the job write permission to create releases
-    steps:
-    - name: Echo
-      run: |
-        echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
-        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
-        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
-
-    - name: Create Release
-      if: ${{ !env.ACT }}
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{needs.gitversion.outputs.semver}}
-        files: just-testing*.txt

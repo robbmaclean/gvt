@@ -17,7 +17,7 @@ jobs:
   # TODO would be good to valdate that the version that comes out of gitversion is in fact a pre-release labeled version. then copy this file and make a normal release that will take the non-labeled version in order to effectively bump the release.
   release:
     runs-on: ubuntu-latest
-    needs: gitversion
+    needs: [gitversion, build]
     permissions: # Add permissions block here
       contents: write # Give the job write permission to create releases
     steps:

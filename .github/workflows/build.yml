@@ -32,8 +32,8 @@ jobs:
 
         echo "Checking if tag $VERSION exists and matches HEAD..."
 
-        # Fetch tags from origin
-        git fetch --tags
+        # Fetch tags from origin (suppressing the output)
+        git fetch --tags > /dev/null 2>&1
 
         # Check if tag exists
         if git show-ref --tags --quiet --verify "refs/tags/$VERSION"; then
@@ -58,7 +58,7 @@ jobs:
         VERSION="${{inputs.version}}"
 
         # Ensure version does not contain characters that will mess up sed command
-        if [[ "$VERSION" =~ [/&] ]]; then
+        if echo "$VERSION" | grep -q '[\/&]'; then
           echo "❌ VERSION cannot contain unsupported characters '/'' or '&': $VERSION"
           exit 1
         fi

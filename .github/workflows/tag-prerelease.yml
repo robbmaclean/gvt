@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   gitversion:
-    uses: ./.github/workflows/gitversion-job.yml
+    uses: ./.github/workflows/gitversion.yml
 
   tag:
     needs: gitversion

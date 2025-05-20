@@ -1,4 +1,4 @@
-name: Create Release
+name: Release
 
 on:
   workflow_dispatch:
@@ -15,7 +15,9 @@ on:
 jobs:
 
   gitversion:
-    uses: ./.github/workflows/gitversion-job.yml
+    uses: ./.github/workflows/gitversion.yml
+    with:
+      version: ${{ inputs.releaseType == 'Pre-Release' }}
 
   test:
     uses: ./.github/workflows/test.yml
@@ -24,7 +26,8 @@ jobs:
     uses: ./.github/workflows/build.yml
     needs: [gitversion, test]
     with:
-      version: ${{needs.gitversion.outputs.semVer}}
+      # When "Release" is chosen, the pre-release tag will be stripped from the version in order to effectively bump to the upcoming release version.
+      version: ${{ inputs.releaseType == 'Release' && needs.gitversion.outputs.majorMinorPatch || needs.gitversion.outputs.semVer }}
 
   # TODO would be good to valdate that the version that comes out of gitversion is in fact a pre-release labeled version. then copy this file and make a normal release that will take the non-labeled version in order to effectively bump the release.
   release:

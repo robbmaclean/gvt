@@ -3,7 +3,7 @@
 name: Build
 
 on:
-  # Build can be run manually (but the version will not be set)
+  # This would allow build to be run manually (without the version being set in the appropriate locations and without creating/tagging a release)
   #workflow_dispatch:
   workflow_call:
     inputs:

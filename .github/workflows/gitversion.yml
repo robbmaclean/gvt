@@ -8,6 +8,13 @@ name: Run GitVersion
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      # This input can be used to ensure we don't accidentally make a pre-release from a commit that was tagged with an official version number.
+      validatePreRelease:
+        description: "When enabled, a validation step will run to ensure the computed version is a pre-release version (with a pre-release tag)."
+        required: false
+        type: boolean
+        default: false
     outputs:
       semVer:
         description: "The calculated SemVer."
@@ -72,5 +79,16 @@ jobs:
           # PreReleaseLabel
           preReleaseLabel=$(jq -r .PreReleaseLabel gitversion.json)
           echo "preReleaseLabel=$preReleaseLabel" >> $GITHUB_OUTPUT
+
+      - name: Validate Pre-Release Tag
+        if: ${{ inputs.validatePreRelease == true }}
+        run: |
+          echo "Validating that the computed version is a pre-release..."
+          preReleaseTag="${{ env.ACT && steps.gitversion_act.outputs.preReleaseTag || steps.gitversion_ci.outputs.preReleaseTag }}"
+          if [[ -z "$preReleaseTag" ]]; then
+            echo "❌ Validation failed: The computed version is a release version (no pre-release tag present)."
+            exit 1
+          fi
+          echo "✅ Validation passed: Pre-release label is '$preReleaseTag'"
 
 

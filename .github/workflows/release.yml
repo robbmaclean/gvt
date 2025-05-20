@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       releaseType:
-        description: 'Choose whether to build (and tag) a pre-release version or an official release. When "Release" is chosen, the next major.minor.patch will be used for the build and tag in order to mark the official release version.'
+        description: 'Choose whether to build a "Pre-Release" version or an official "Release".'
         required: true
         default: 'Pre-Release'
         type: choice
@@ -29,7 +29,6 @@ jobs:
       # When "Release" is chosen, the pre-release tag will be stripped from the version in order to effectively bump to the upcoming release version.
       version: ${{ inputs.releaseType == 'Release' && needs.gitversion.outputs.majorMinorPatch || needs.gitversion.outputs.semVer }}
 
-  # TODO would be good to valdate that the version that comes out of gitversion is in fact a pre-release labeled version. then copy this file and make a normal release that will take the non-labeled version in order to effectively bump the release.
   release:
     runs-on: ubuntu-latest
     needs: [gitversion, build]

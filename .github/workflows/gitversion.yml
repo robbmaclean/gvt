@@ -3,7 +3,7 @@
 # look in the "Run GitVersion" step output of the "gitversion" job to see the complete info that
 # GitVersion produces, or look in the "Complete Job" step at the end to see the values being made
 # available to other workflows.
-name: Run GitVersion
+name: Version
 
 on:
   workflow_dispatch:

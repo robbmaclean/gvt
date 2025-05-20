@@ -8,11 +8,14 @@ jobs:
   gitversion:
     uses: ./.github/workflows/gitversion-job.yml
 
+  test:
+    uses: ./.github/workflows/test.yml
+
   build:
     uses: ./.github/workflows/build.yml
-    needs: gitversion
+    needs: [gitversion, test]
     with:
-      version: ${{needs.gitversion.outputs.semver}}
+      version: ${{needs.gitversion.outputs.semVer}}
 
   # TODO would be good to valdate that the version that comes out of gitversion is in fact a pre-release labeled version. then copy this file and make a normal release that will take the non-labeled version in order to effectively bump the release.
   release:

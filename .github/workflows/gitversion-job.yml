@@ -10,11 +10,14 @@ on:
   workflow_call:
     outputs:
       semVer:
-        description: "The calculated SemVer"
+        description: "The calculated SemVer."
         value: ${{ jobs.gitversion.outputs.semVer }}
       preReleaseLabel:
-        description: "The pre-release label (if any)"
+        description: "The pre-release label (if any)."
         value: ${{ jobs.gitversion.outputs.preReleaseLabel }}
+      majorMinorPatch:
+        description: "The MajorMinorPatch which can be used to pull the next release version from the pre-release version."
+        value: ${{ jobs.gitversion.outputs.majorMinorPatch }}
 
 jobs:
 
@@ -22,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       semVer: ${{ env.ACT && steps.gitversion_act.outputs.semVer || steps.gitversion_ci.outputs.semVer }}
+      majorMinorPatch: ${{ env.ACT && steps.gitversion_act.outputs.majorMinorPatch || steps.gitversion_ci.outputs.majorMinorPatch }}
       preReleaseLabel: ${{ env.ACT && steps.gitversion_act.outputs.preReleaseLabel || steps.gitversion_ci.outputs.preReleaseLabel }}
     steps:
       - name: Checkout
@@ -56,8 +60,16 @@ jobs:
           export PATH="$PATH:$HOME/.dotnet/tools"
           dotnet-gitversion /showConfig
           dotnet-gitversion /output json | tee gitversion.json
+
+          # SemVer
           semVer=$(jq -r .SemVer gitversion.json)
           echo "semVer=$semVer" >> $GITHUB_OUTPUT
+
+          # MajorMinorPatch
+          majorMinorPatch=$(jq -r .MajorMinorPatch gitversion.json)
+          echo "majorMinorPatch=$majorMinorPatch" >> $GITHUB_OUTPUT
+
+          # PreReleaseLabel
           preReleaseLabel=$(jq -r .PreReleaseLabel gitversion.json)
           echo "preReleaseLabel=$preReleaseLabel" >> $GITHUB_OUTPUT
 

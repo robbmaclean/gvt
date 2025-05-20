@@ -1,109 +1,44 @@
-# Run with `act --artifact-server-path ./artifacts -j publish`
-
-# >>>> THIS IS THE OLD ONE
-name: Release
+name: Create Release
 
 on:
-  # Build can be run manually
   workflow_dispatch:
-  # push:
-  #   # branches: [main]
-  #   tags:
-  #     - '[0-9]+.[0-9]+.[0-9]+'
-  #     - '[0-9]+.[0-9]+.[0-9]+-**'
-  workflow_call:
     inputs:
-      # When true, the version will be bumped to the official release version
-      release:
-        required: false
-        type: boolean
-        default: false
+      releaseType:
+        description: 'Choose whether to build (and tag) a pre-release version or an official release. When "Release" is chosen, the next major.minor.patch will be used for the build and tag in order to mark the official release version.'
+        required: true
+        default: 'Pre-Release'
+        type: choice
+        options:
+        - Pre-Release
+        - Release
 
 jobs:
 
   gitversion:
     uses: ./.github/workflows/gitversion-job.yml
 
-  pretend-build:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  build:
+    uses: ./.github/workflows/build.yml
+    needs: [gitversion, test]
+    with:
+      version: ${{needs.gitversion.outputs.semVer}}
+
+  # TODO would be good to valdate that the version that comes out of gitversion is in fact a pre-release labeled version. then copy this file and make a normal release that will take the non-labeled version in order to effectively bump the release.
+  release:
     runs-on: ubuntu-latest
-    needs: gitversion
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Echo
-      run: |
-        echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
-        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
-        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
-
-    - name: Ensure version tag is on HEAD or doesn't exist
-      run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
-
-        echo "Checking if tag $VERSION exists and matches HEAD..."
-
-        # Fetch tags from origin
-        git fetch --tags
-
-        # Check if tag exists
-        if git show-ref --tags --quiet --verify "refs/tags/$VERSION"; then
-          TAG_COMMIT=$(git rev-list -n 1 "refs/tags/$VERSION")
-          HEAD_COMMIT=$(git rev-parse HEAD)
-
-          echo "Tag $VERSION exists at commit $TAG_COMMIT"
-          echo "HEAD is at commit $HEAD_COMMIT"
-
-          if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
-            echo "❌ Tag $VERSION exists but does not point to HEAD. Aborting."
-            exit 1
-          else
-            echo "✅ Tag $VERSION is already on HEAD. Continuing."
-          fi
-        else
-          echo "ℹ️ Tag $VERSION does not exist. It will be created later."
-        fi
-
-    - name: Update Version
-      run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
-
-        # Ensure version does not contain characters that will mess up sed command
-        if [[ "$VERSION" =~ [/&] ]]; then
-          echo "❌ VERSION cannot contain unsupported characters '/'' or '&': $VERSION"
-          exit 1
-        fi
-
-        # Ensure target files exist
-        if [[ ! -f backend/build-files/build-defaults.properties || ! -f backend/modules/hyland/core/config/hm-version.properties ]]; then
-          echo "❌ One or more version files are missing."
-          exit 1
-        fi
-
-        sed -i "s/^releaseVersion=.*/releaseVersion=$VERSION/" backend/build-files/build-defaults.properties
-        echo ">>>>Updated properties file:"
-        cat backend/build-files/build-defaults.properties
-
-        sed -i "s/^hm\.version=.*/hm.version=$VERSION/" backend/modules/hyland/core/config/hm-version.properties
-        echo ">>>>Updated hm-version.properties file:"
-        cat backend/modules/hyland/core/config/hm-version.properties
-
-    - name: Update package.json version
-      working-directory: frontend
-      run: |
-        VERSION="${{needs.gitversion.outputs.semVer}}"
-        npm version $VERSION --no-git-tag-version
-        echo ">>>THE PACKAGEJSON NOW:"
-        cat package.json
-        echo ">>>THE PACKAGElockJSON NOW:"
-        cat package-lock.json
-
-  just-testing:
-    runs-on: ubuntu-latest
-    needs: gitversion
+    needs: [gitversion, build]
     permissions: # Add permissions block here
       contents: write # Give the job write permission to create releases
     steps:
+
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
     - name: Echo
       run: |
         echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
@@ -115,4 +50,5 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{needs.gitversion.outputs.semver}}
-        files: just-testing*.txt
+        prerelease: true
+        files: artifacts/**/just-testing*.txt

@@ -1,4 +1,4 @@
-# Run with `act --artifact-server-path ./artifacts -j publish`
+# Don't forget to remove the "npm version" update script and related package json scripts.
 
 name: Build
 

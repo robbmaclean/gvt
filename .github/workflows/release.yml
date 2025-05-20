@@ -41,11 +41,13 @@ jobs:
       with:
         path: artifacts
 
-    - name: Echo
+    - name: Echo Some Pretend Build Files
       run: |
         echo "THER VERSION: ${{needs.gitversion.outputs.semver}}"
-        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > just-testing-1.txt
-        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > just-testing-2.txt
+        mkdir somebuild
+        mkdir anotherbuild
+        echo "Just Testing 1 ${{needs.gitversion.outputs.semver}}" > somebuild/just-testing-1.txt
+        echo "Just Testing 2 ${{needs.gitversion.outputs.semver}}" > anotherbuild/just-testing-2.txt
 
     - name: Create Release
       if: ${{ !env.ACT }}

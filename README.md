@@ -6,4 +6,4 @@ Required?
 
 fa-il.
 
-YOUAREHERE // distributing the workflows.  want to make a stub for tests. want tag validation in pre-release.yml to ensure gitversion is spitting out a prerelease version. then bring all this to work computer including GitVersion.yml
+YOUAREHERE // want to see what i can do in GitVersion.yml to allow us to bump the major version based on commit message. then bring all this to work computer including GitVersion.yml

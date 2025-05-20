@@ -1,4 +1,4 @@
-commit-message-incrementing: Disabled
+commit-message-incrementing: Enabled
 # version-in-branch-pattern: (?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*
 # update-build-number: true
 

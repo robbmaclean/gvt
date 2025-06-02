@@ -3,6 +3,9 @@ name: Persist JSON State
 on:
   workflow_dispatch:  # You can change this to `push` or `schedule`
 
+permissions:
+  contents: write
+
 jobs:
   persist-state:
     runs-on: ubuntu-latest

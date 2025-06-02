@@ -5,6 +5,8 @@ on:
   #   types: [opened, reopened, synchronize]
   workflow_dispatch:
 
+permissions:
+  contents: write
 jobs:
   test-backend:
     uses: ./.github/workflows/test-backend.yml
@@ -21,6 +23,10 @@ jobs:
         with:
           fetch-depth: 0  # Needed to interact with other branches
 
+      - name: Set up Git config
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "github-actions"
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 

@@ -105,3 +105,12 @@ jobs:
           git add state.json
           git commit -m "Update state on ${{ github.run_id }}" || echo "No changes to commit"
           git push origin workflow-state
+
+      - name: Add summary
+        run: |
+          {
+            echo "### 📊 Coverage Comparison"
+            echo "- Console App: ${console_app}% (was ${prev_console}%)"
+            echo "- Services: ${services}% (was ${prev_services}%)"
+            echo "- Frontend: ${frontend}% (was ${prev_frontend}%)"
+          } >> $GITHUB_STEP_SUMMARY

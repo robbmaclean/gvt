@@ -80,8 +80,18 @@ jobs:
               exit 1
             fi
           else
+            prev_console=0
+            prev_services=0
+            prev_frontend=0
             echo "No previous coverage.json found, skipping comparison."
           fi
+
+          echo "console_app=$console_app" >> $GITHUB_OUTPUT
+          echo "services=$services" >> $GITHUB_OUTPUT
+          echo "frontend=$frontend" >> $GITHUB_OUTPUT
+          echo "prev_console=$prev_console" >> $GITHUB_OUTPUT
+          echo "prev_services=$prev_services" >> $GITHUB_OUTPUT
+          echo "prev_frontend=$prev_frontend" >> $GITHUB_OUTPUT
 
       - name: Save current coverage to JSON
         run: |
@@ -110,7 +120,7 @@ jobs:
         run: |
           {
             echo "### 📊 Coverage Comparison"
-            echo "- Console App: ${console_app}% (was ${prev_console}%)"
-            echo "- Services: ${services}% (was ${prev_services}%)"
-            echo "- Frontend: ${frontend}% (was ${prev_frontend}%)"
+            echo "- Console App: ${{ steps.compare.outputs.console_app }}% (was ${{ steps.compare.outputs.prev_console }}%)"
+            echo "- Services: ${{ steps.compare.outputs.services }}% (was ${{ steps.compare.outputs.prev_services }}%)"
+            echo "- Frontend: ${{ steps.compare.outputs.frontend }}% (was ${{ steps.compare.outputs.prev_frontend }}%)"
           } >> $GITHUB_STEP_SUMMARY

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       console-app: "84"
-      services: "77"
+      services: "78"
     steps:
       - name: Mock backend test output
         run: echo "Simulated backend tests and coverage"

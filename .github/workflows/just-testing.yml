@@ -1,0 +1,50 @@
+name: Persist JSON State
+
+on:
+  workflow_dispatch:  # You can change this to `push` or `schedule`
+
+jobs:
+  persist-state:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed to interact with other branches
+
+      - name: Set up Git config
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "github-actions"
+
+      - name: Fetch workflow-state branch if it exists
+        run: |
+          git fetch origin workflow-state || echo "No state branch yet"
+
+      - name: Load existing state.json if available
+        id: load_state
+        run: |
+          if git show origin/workflow-state:state.json > /dev/null 2>&1; then
+            git checkout -b workflow-state origin/workflow-state
+            cp state.json $GITHUB_WORKSPACE/state.json
+            echo "State loaded:"
+            cat $GITHUB_WORKSPACE/state.json
+          else
+            echo "{}" > $GITHUB_WORKSPACE/state.json
+            echo "No previous state. Using empty object."
+            git checkout -b workflow-state
+          fi
+
+      - name: Update state.json
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq --arg time "$TIMESTAMP" '.lastRun = $time' $GITHUB_WORKSPACE/state.json > new_state.json
+          mv new_state.json state.json
+          cat state.json
+
+      - name: Commit and push updated state.json
+        run: |
+          git add state.json
+          git commit -m "Update state on ${{ github.run_id }}" || echo "No changes to commit"
+          git push origin workflow-state

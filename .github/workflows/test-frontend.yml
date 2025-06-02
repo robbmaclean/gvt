@@ -1,0 +1,17 @@
+name: Mock Test Frontend
+
+on:
+  workflow_call:
+    outputs:
+      frontend-coverage-percent:
+        description: "Mocked frontend coverage"
+        value: ${{ jobs.mock-frontend.outputs.frontend }}
+
+jobs:
+  mock-frontend:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: "88"
+    steps:
+      - name: Mock frontend test output
+        run: echo "Simulated frontend tests and coverage"

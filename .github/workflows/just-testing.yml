@@ -1,32 +1,34 @@
-name: Persist JSON State
+name: Continuous Integration
 
 on:
-  workflow_dispatch:  # You can change this to `push` or `schedule`
-
-permissions:
-  contents: write
+  # pull_request:
+  #   types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 jobs:
-  persist-state:
-    runs-on: ubuntu-latest
+  test-backend:
+    uses: ./.github/workflows/test-backend.yml
 
+  test-frontend:
+    uses: ./.github/workflows/test-frontend.yml
+
+  all-tests:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
     steps:
-      - name: Checkout main repo
+      - name: Checkout (needed for coverage history)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Needed to interact with other branches
 
-      - name: Set up Git config
-        run: |
-          git config --global user.email "github-actions@users.noreply.github.com"
-          git config --global user.name "github-actions"
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Fetch workflow-state branch if it exists
         run: |
           git fetch origin workflow-state || echo "No state branch yet"
 
       - name: Load existing state.json if available
-        id: load_state
         run: |
           if git show origin/workflow-state:state.json > /dev/null 2>&1; then
             git checkout -b workflow-state origin/workflow-state
@@ -38,10 +40,57 @@ jobs:
             git checkout -b workflow-state
           fi
 
-      - name: Update state.json
+      - name: Compare coverage
+        id: compare
+        run: |
+          set -e
+
+          # Current values
+          console_app=${{needs.test-backend.outputs.console-app-coverage-percent}}
+          services=${{needs.test-backend.outputs.services-coverage-percent}}
+          frontend=${{needs.test-frontend.outputs.frontend-coverage-percent}}
+
+          echo "Current coverage: consoleApp=$console_app, services=$services, frontend=$frontend"
+
+          if [ -f $GITHUB_WORKSPACE/state.json ]; then
+            prev_console=$(jq .consoleApp $GITHUB_WORKSPACE/state.json)
+            prev_services=$(jq .services $GITHUB_WORKSPACE/state.json)
+            prev_frontend=$(jq .frontend $GITHUB_WORKSPACE/state.json)
+
+            echo "Previous coverage: consoleApp=$prev_console, services=$prev_services, frontend=$prev_frontend"
+
+            if [ "$console_app" -lt "$prev_console" ]; then
+              echo "❌ Console App coverage decreased! ($console_app < $prev_console)"
+              exit 1
+            fi
+
+            if [ "$services" -lt "$prev_services" ]; then
+              echo "❌ Services coverage decreased! ($services < $prev_services)"
+              exit 1
+            fi
+
+            if [ "$frontend" -lt "$prev_frontend" ]; then
+              echo "❌ Frontend coverage decreased! ($frontend < $prev_frontend)"
+              exit 1
+            fi
+          else
+            echo "No previous coverage.json found, skipping comparison."
+          fi
+
+      - name: Save current coverage to JSON
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          jq --arg time "$TIMESTAMP" '.lastRun = $time' $GITHUB_WORKSPACE/state.json > new_state.json
+
+          jq --argjson consoleApp ${{needs.test-backend.outputs.console-app-coverage-percent}} \
+            --argjson services ${{needs.test-backend.outputs.services-coverage-percent}} \
+            --argjson frontend ${{needs.test-frontend.outputs.frontend-coverage-percent}} \
+            --arg lastRun "$TIMESTAMP" \
+            '.consoleApp = $consoleApp |
+              .services = $services |
+              .frontend = $frontend |
+              .lastRun = $lastRun' \
+            $GITHUB_WORKSPACE/state.json > new_state.json
+
           mv new_state.json state.json
           cat state.json
 

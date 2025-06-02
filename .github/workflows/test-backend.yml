@@ -1,0 +1,21 @@
+name: Mock Test Backend
+
+on:
+  workflow_call:
+    outputs:
+      console-app-coverage-percent:
+        description: "Mocked backend console app coverage"
+        value: ${{ jobs.mock-backend.outputs.console-app }}
+      services-coverage-percent:
+        description: "Mocked backend services coverage"
+        value: ${{ jobs.mock-backend.outputs.services }}
+
+jobs:
+  mock-backend:
+    runs-on: ubuntu-latest
+    outputs:
+      console-app: "82"
+      services: "76"
+    steps:
+      - name: Mock backend test output
+        run: echo "Simulated backend tests and coverage"

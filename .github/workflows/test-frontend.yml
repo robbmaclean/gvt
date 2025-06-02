@@ -11,7 +11,7 @@ jobs:
   mock-frontend:
     runs-on: ubuntu-latest
     outputs:
-      frontend: "88"
+      frontend: "89"
     steps:
       - name: Mock frontend test output
         run: echo "Simulated frontend tests and coverage"

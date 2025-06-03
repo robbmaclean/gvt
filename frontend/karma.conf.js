@@ -1,14 +1,33 @@
 module.exports = function (config) {
   config.set({
-    // ... other config options
-    browsers: ['ChromeHeadless'],
-    customLaunchers: {
-      ChromeHeadlessCI: {
-        base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-gpu']
+    basePath: '',
+    frameworks: ['jasmine', '@angular-devkit/build-angular'],
+    plugins: [
+      require('karma-jasmine'),
+      require('karma-chrome-launcher'),
+      require('karma-coverage'),
+      require('karma-jasmine-html-reporter'),
+      require('karma-spec-reporter'),
+      require('@angular-devkit/build-angular/plugins/karma')
+    ],
+    client: {
+      clearContext: false // leave Jasmine Spec Runner output visible in browser
+    },
+    reporters: ['spec', 'coverage'],
+    coverageReporter: {
+      type: 'html',
+      dir: require('path').join(__dirname, 'coverage'),
+      subdir: '.',
+      check: {
+        global: {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80
+        }
       }
     },
-    // Add this to avoid issues with sandboxing in GitHub Actions
-    browserNoActivityTimeout: 60000
+    browsers: ['ChromeHeadless'],
+    restartOnFileChange: true
   });
 };

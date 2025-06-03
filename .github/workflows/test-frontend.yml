@@ -1,17 +1,49 @@
-name: Mock Test Frontend
+name: Test Frontend
 
 on:
   workflow_call:
     outputs:
       frontend-coverage-percent:
-        description: "Mocked frontend coverage"
-        value: ${{ jobs.mock-frontend.outputs.frontend }}
+        description: "Frontend unit test coverage (lines)"
+        value: ${{ jobs.test-frontend.outputs.coverage }}
 
 jobs:
-  mock-frontend:
+  test-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
     outputs:
-      frontend: "89"
+      coverage: ${{ steps.extract.outputs.coverage }}
+
     steps:
-      - name: Mock frontend test output
-        run: echo "Simulated frontend tests and coverage"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run test -- --watch=false --code-coverage
+
+      - name: Extract line coverage percent
+        id: extract
+        run: |
+          COVERAGE_FILE=coverage/lcov-report/index.html
+
+          if [ ! -f "$COVERAGE_FILE" ]; then
+            echo "Coverage report not found!" >&2
+            exit 1
+          fi
+
+          # Extract the line coverage percentage from the HTML table
+          PERCENT=$(grep -A 1 '<td class="line"' $COVERAGE_FILE | grep -oP '[0-9]+(?=%)' | head -n1)
+
+          echo "Extracted line coverage: $PERCENT%"
+          echo "coverage=$PERCENT" >> $GITHUB_OUTPUT

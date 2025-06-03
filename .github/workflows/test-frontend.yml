@@ -35,7 +35,7 @@ jobs:
       - name: Extract line coverage percent
         id: extract
         run: |
-          COVERAGE_FILE=coverage/lcov-report/index.html
+          COVERAGE_FILE=coverage/index.html
 
           if [ ! -f "$COVERAGE_FILE" ]; then
             echo "Coverage report not found!" >&2

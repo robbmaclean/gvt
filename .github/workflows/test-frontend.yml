@@ -35,15 +35,19 @@ jobs:
       - name: Extract line coverage percent
         id: extract
         run: |
-          COVERAGE_FILE=coverage/index.html
+          SUMMARY_FILE=coverage/coverage-summary.json
 
-          if [ ! -f "$COVERAGE_FILE" ]; then
-            echo "Coverage report not found!" >&2
+          if [ ! -f "$SUMMARY_FILE" ]; then
+            echo "❌ Coverage summary file not found!" >&2
             exit 1
           fi
 
-          # Extract the line coverage percentage from the HTML table
-          PERCENT=$(grep -A 1 '<td class="line"' $COVERAGE_FILE | grep -oP '[0-9]+(?=%)' | head -n1)
+          PERCENT=$(jq '.total.lines.pct' "$SUMMARY_FILE")
+
+          if [[ -z "$PERCENT" || "$PERCENT" == "null" ]]; then
+            echo "❌ Failed to extract coverage percent!" >&2
+            exit 1
+          fi
 
           echo "Extracted line coverage: $PERCENT%"
-          echo "coverage=$PERCENT" >> $GITHUB_OUTPUT
+          echo "coverage=$PERCENT" >> "$GITHUB_OUTPUT"

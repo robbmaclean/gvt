@@ -25,7 +25,12 @@ module.exports = function (config) {
           functions: 0,
           lines: 0
         }
-      }
+      },
+      reporters: [
+        // { type: 'html' },
+        // { type: 'text-summary' },
+        { type: 'json-summary' } // 👈 This enables coverage-summary.json
+      ]
     },
     browsers: ['ChromeHeadless'],
     restartOnFileChange: true

@@ -97,9 +97,9 @@ jobs:
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          jq --argjson consoleApp "${{ needs.test-backend.outputs.console-app-coverage-percent }}" \
-            --argjson services "${{ needs.test-backend.outputs.services-coverage-percent }}" \
-            --argjson frontend "${{ needs.test-frontend.outputs.frontend-coverage-percent }}" \
+          jq --arg consoleApp "${{ needs.test-backend.outputs.console-app-coverage-percent }}" \
+            --arg services "${{ needs.test-backend.outputs.services-coverage-percent }}" \
+            --arg frontend "${{ needs.test-frontend.outputs.frontend-coverage-percent }}" \
             --arg lastRun "$TIMESTAMP" \
             '.consoleApp = $consoleApp |
               .services = $services |

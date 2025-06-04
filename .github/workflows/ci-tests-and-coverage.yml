@@ -63,7 +63,7 @@ jobs:
           echo "prev_services=$prev_services" >> $GITHUB_OUTPUT
           echo "prev_frontend=$prev_frontend" >> $GITHUB_OUTPUT
 
-          # Output the current test results too
+          # Output the current test results too for convenience
           echo "console=${{needs.test-backend.outputs.console-app-coverage-percent}}" >> $GITHUB_OUTPUT
           echo "services=${{needs.test-backend.outputs.services-coverage-percent}}" >> $GITHUB_OUTPUT
           echo "frontend=${{needs.test-frontend.outputs.frontend-coverage-percent}}" >> $GITHUB_OUTPUT

@@ -50,21 +50,27 @@ jobs:
           echo "Backend services: ${{ needs.test-backend.outputs.services-coverage-percent }}"
           echo "Frontend: ${{ needs.test-frontend.outputs.frontend-coverage-percent }}"
 
-      - name: Save current coverage to JSON
+      - name: Save current coverage to state.json
         run: |
-          jq --arg branch "${GITHUB_REF#refs/heads/}" \
-             --arg console "${{ needs.backend.outputs.console-app-coverage-percent }}" \
-             --arg services "${{ needs.backend.outputs.services-coverage-percent }}" \
-             --arg frontend "${{ needs.frontend.outputs.frontend-coverage-percent }}" \
-             --arg lastRun "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-             '
-             .[$branch] = {
-               consoleApp: $console,
-               services: $services,
-               frontend: $frontend,
-               lastRun: $lastRun
-             }
-             ' state.json > new_state.json && mv new_state.json state.json
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          CONSOLE="${{ needs.test-backend.outputs.console-app-coverage-percent }}"
+          SERVICES="${{ needs.test-backend.outputs.services-coverage-percent }}"
+          FRONTEND="${{ needs.test-frontend.outputs.frontend-coverage-percent }}"
+          LAST_RUN="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+          jq --arg branch "$BRANCH_NAME" \
+            --arg console "$CONSOLE" \
+            --arg services "$SERVICES" \
+            --arg frontend "$FRONTEND" \
+            --arg lastRun "$LAST_RUN" \
+            '
+            .[$branch] = {
+              consoleApp: $console,
+              services: $services,
+              frontend: $frontend,
+              lastRun: $lastRun
+            }
+            ' state.json > new_state.json && mv new_state.json state.json
 
           cat state.json
 

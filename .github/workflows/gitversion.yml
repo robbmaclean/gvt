@@ -90,6 +90,14 @@ jobs:
             echo "❌ Validation failed: The computed version is a release version (no pre-release tag present)."
             exit 1
           fi
-          echo "✅ Validation passed: Pre-release label is '$preReleaseTag'"
+          echo "Validation passed: Pre-release label is '$preReleaseTag'"
 
+      - name: Add Summary
+        if: ${{ !env.ACT }}
+        run: |
+          semVer="${{ env.ACT && steps.gitversion_act.outputs.semVer || steps.gitversion_ci.outputs.semVer }}"
+          {
+            echo "### GitVersion Result"
+            echo "**SemVer**: \`$semVer\`"
+          } >> $GITHUB_STEP_SUMMARY
 

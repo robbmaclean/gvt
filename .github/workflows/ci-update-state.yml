@@ -44,14 +44,6 @@ jobs:
             echo "{}" > state.json
           fi
 
-      - name: Run tests and collect coverage
-        uses: ./.github/workflows/test-backend.yml
-        id: backend
-
-      - name: Run frontend tests
-        uses: ./.github/workflows/test-frontend.yml
-        id: frontend
-
       - name: Save current coverage to JSON
         run: |
           jq --arg branch "${GITHUB_REF#refs/heads/}" \

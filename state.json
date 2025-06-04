@@ -10,5 +10,11 @@
     "services": "78",
     "frontend": "75",
     "lastRun": "2025-06-04T19:24:52Z"
+  },
+  "release/1.2.0": {
+    "consoleApp": "84",
+    "services": "78",
+    "frontend": "75",
+    "lastRun": "2025-06-04T20:25:12Z"
   }
 }

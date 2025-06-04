@@ -1,0 +1,117 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  test-backend:
+    uses: ./.github/workflows/test-backend.yml
+
+  test-frontend:
+    uses: ./.github/workflows/test-frontend.yml
+
+  all-tests:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    steps:
+      - name: Show target branch
+        run: echo "Target branch is ${{ github.base_ref }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed to interact with other branches
+
+      - name: Set up Git config
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "github-actions"
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Fetch ci-state branch if it exists
+        run: git fetch origin ci-state || echo "No state branch yet"
+
+      - name: Load previous coverage from ci-state (if available)
+        id: coverage
+        run: |
+          TARGET_BRANCH="${{ github.base_ref }}"
+          echo "Target branch: $TARGET_BRANCH"
+
+          prev_console=0
+          prev_services=0
+          prev_frontend=0
+          has_previous=false
+
+          if git fetch origin ci-state && git show origin/ci-state:state.json > state.json 2>/dev/null; then
+            echo "Loaded state.json from ci-state"
+            if jq -e --arg branch "$TARGET_BRANCH" '.[$branch]' state.json > /dev/null; then
+              has_previous=true
+              prev_console=$(jq -r --arg branch "$TARGET_BRANCH" '.[$branch].consoleApp // 0' state.json)
+              prev_services=$(jq -r --arg branch "$TARGET_BRANCH" '.[$branch].services // 0' state.json)
+              prev_frontend=$(jq -r --arg branch "$TARGET_BRANCH" '.[$branch].frontend // 0' state.json)
+            fi
+          else
+            echo "ci-state or state.json not found for target branch: $TARGET_BRANCH (coverage increase will not be enforced)"
+          fi
+
+          echo "has_previous=$has_previous" >> $GITHUB_OUTPUT
+          echo "prev_console=$prev_console" >> $GITHUB_OUTPUT
+          echo "prev_services=$prev_services" >> $GITHUB_OUTPUT
+          echo "prev_frontend=$prev_frontend" >> $GITHUB_OUTPUT
+
+          # Output the current test results too
+          echo "console=${{needs.test-backend.outputs.console-app-coverage-percent}}" >> $GITHUB_OUTPUT
+          echo "services=${{needs.test-backend.outputs.services-coverage-percent}}" >> $GITHUB_OUTPUT
+          echo "frontend=${{needs.test-frontend.outputs.frontend-coverage-percent}}" >> $GITHUB_OUTPUT
+
+      - name: Enforce Coverage Increase
+        if: ${{ steps.coverage.outputs.has_previous }}
+        run: |
+          set -e
+
+          console=${{steps.coverage.outputs.console}}
+          services=${{steps.coverage.outputs.services}}
+          frontend=${{steps.coverage.outputs.frontend}}
+          prev_console=${{steps.coverage.outputs.prev_console}}
+          prev_services=${{steps.coverage.outputs.prev_services}}
+          prev_frontend=${{steps.coverage.outputs.prev_frontend}}
+
+          echo "Current coverage: consoleApp=$console, services=$services, frontend=$frontend"
+          echo "Previous coverage: consoleApp=$prev_console, services=$prev_services, frontend=$prev_frontend"
+
+          if [ "$console" -lt "$prev_console" ]; then
+            echo "❌ Console App coverage decreased! ($console < $prev_console)"
+            exit 1
+          fi
+          if [ "$services" -lt "$prev_services" ]; then
+            echo "❌ Services coverage decreased! ($services < $prev_services)"
+            exit 1
+          fi
+          if [ "$frontend" -lt "$prev_frontend" ]; then
+            echo "❌ Frontend coverage decreased! ($frontend < $prev_frontend)"
+            exit 1
+          fi
+
+      - name: Add summary
+        run: |
+          has_previous="${{ steps.coverage.outputs.has_previous }}"
+          prev_console="${{ steps.coverage.outputs.prev_console }}"
+          prev_services="${{ steps.coverage.outputs.prev_services }}"
+          prev_frontend="${{ steps.coverage.outputs.prev_frontend }}"
+
+          if [ "$has_previous" != "true" ]; then
+            prev_console="undefined"
+            prev_services="undefined"
+            prev_frontend="undefined"
+          fi
+
+          {
+            echo "### 📊 Coverage Comparison"
+            echo "- Console App: ${{ steps.coverage.outputs.console }}% (was $prev_console)"
+            echo "- Services: ${{ steps.coverage.outputs.services }}% (was $prev_services)"
+            echo "- Frontend: ${{ steps.coverage.outputs.frontend }}% (was $prev_frontend)"
+          } >> $GITHUB_STEP_SUMMARY

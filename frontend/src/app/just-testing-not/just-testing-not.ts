@@ -10,7 +10,7 @@ export class JustTestingNot {
   doSomething() {
     console.log('Sorry I am not tested')
   }
-  // doSomethingElse() {
-  //   console.log('Sorry I am ALSO not tested')
-  // }
+  doSomethingElse() {
+    console.log('Sorry I am ALSO not tested')
+  }
 }

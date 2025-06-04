@@ -1,0 +1,70 @@
+name: Update Coverage State
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'release/**'
+
+permissions:
+  contents: write
+
+jobs:
+  update-state:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git
+        run: |
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "github-actions"
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Load existing state.json
+        run: |
+          git fetch origin ci-state || echo "No state branch yet"
+          if git show origin/ci-state:state.json > /dev/null 2>&1; then
+            git checkout -b ci-state origin/ci-state
+          else
+            git checkout -b ci-state
+            echo "{}" > state.json
+          fi
+
+      - name: Run tests and collect coverage
+        uses: ./.github/workflows/test-backend.yml
+        id: backend
+
+      - name: Run frontend tests
+        uses: ./.github/workflows/test-frontend.yml
+        id: frontend
+
+      - name: Save current coverage to JSON
+        run: |
+          jq --arg branch "${GITHUB_REF#refs/heads/}" \
+             --arg console "${{ needs.backend.outputs.console-app-coverage-percent }}" \
+             --arg services "${{ needs.backend.outputs.services-coverage-percent }}" \
+             --arg frontend "${{ needs.frontend.outputs.frontend-coverage-percent }}" \
+             --arg lastRun "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+             '
+             .[$branch] = {
+               consoleApp: $console,
+               services: $services,
+               frontend: $frontend,
+               lastRun: $lastRun
+             }
+             ' state.json > new_state.json && mv new_state.json state.json
+
+          cat state.json
+
+      - name: Commit and push updated state.json
+        run: |
+          git add state.json
+          git commit -m "Update state for $GITHUB_REF on ${{ github.run_id }}" || echo "No changes"
+          git push origin ci-state

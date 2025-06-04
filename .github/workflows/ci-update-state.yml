@@ -44,6 +44,12 @@ jobs:
             echo "{}" > state.json
           fi
 
+      - name: Debug coverage outputs
+        run: |
+          echo "Backend consoleApp: ${{ needs.test-backend.outputs.console-app-coverage-percent }}"
+          echo "Backend services: ${{ needs.test-backend.outputs.services-coverage-percent }}"
+          echo "Frontend: ${{ needs.test-frontend.outputs.frontend-coverage-percent }}"
+
       - name: Save current coverage to JSON
         run: |
           jq --arg branch "${GITHUB_REF#refs/heads/}" \
